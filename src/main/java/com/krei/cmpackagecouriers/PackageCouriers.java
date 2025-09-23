@@ -1,6 +1,7 @@
 package com.krei.cmpackagecouriers;
 
 import com.krei.cmpackagecouriers.compat.Mods;
+import com.krei.cmpackagecouriers.config.PackageCouriersConfig;
 import com.krei.cmpackagecouriers.plane.*;
 import com.krei.cmpackagecouriers.ponder.PonderScenes;
 import com.krei.cmpackagecouriers.stock_ticker.PortableStockTickerReg;
@@ -16,6 +17,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
@@ -70,6 +73,9 @@ public class PackageCouriers {
     public PackageCouriers(IEventBus modEventBus, ModContainer modContainer) {
         if (!Mods.CREATE_MOBILE_PACKAGES.isLoaded())
             PortableStockTickerReg.register();
+
+        // Register config
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, PackageCouriersConfig.COMMON_SPEC);
 
         REGISTRATE.registerEventListeners(modEventBus);
         DATA_COMPONENTS.register(modEventBus);

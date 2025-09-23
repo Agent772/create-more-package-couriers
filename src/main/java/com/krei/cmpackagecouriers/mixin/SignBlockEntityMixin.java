@@ -1,5 +1,6 @@
 package com.krei.cmpackagecouriers.mixin;
 
+import com.krei.cmpackagecouriers.config.PackageCouriersConfig;
 import com.krei.cmpackagecouriers.marker.AddressMarkerHandler;
 import com.krei.cmpackagecouriers.plane.CardboardPlaneEntity;
 import com.simibubi.create.content.logistics.depot.DepotBlock;
@@ -24,6 +25,11 @@ public abstract class SignBlockEntityMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private static void tick(Level level, BlockPos pos, BlockState state, SignBlockEntity sign, CallbackInfo ci) {
+        // Check config first - if depot sign targeting is disabled, skip processing
+        if (!PackageCouriersConfig.COMMON.enableDepotSignTargeting.get()) {
+            return;
+        }
+        
         if (!level.isClientSide() && level.getGameTime()%5 != 2) {
             BlockPos targetPos;
             if (state.getBlock() instanceof WallSignBlock)
