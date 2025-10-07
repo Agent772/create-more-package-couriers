@@ -2,14 +2,14 @@ package com.krei.cmpackagecouriers.plane;
 
 import com.krei.cmpackagecouriers.PackageCouriers;
 import com.krei.cmpackagecouriers.ServerConfig;
-import com.krei.cmpackagecouriers.compat.Mods;
-import com.krei.cmpackagecouriers.compat.curios.CuriosCompat;
 import com.krei.cmpackagecouriers.marker.AddressMarkerHandler;
-import com.krei.cmpackagecouriers.transmitter.LocationTransmitterItem;
+import com.krei.cmpackagecouriers.transmitter.LocationTransmitterHelper;
+
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.box.PackageStyles;
 import com.simibubi.create.content.logistics.depot.DepotBlockEntity;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -26,6 +26,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
+
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
@@ -66,13 +67,16 @@ public class CardboardPlaneItem extends Item implements EjectorLaunchEffect {
                 plane.setUnpack(stack.getOrDefault(PackageCouriers.PRE_OPENED, false));
                 plane.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 0.8F, 1.0F);
 
+                //TODO: this should be handled different as player adresses could be identified by @ in the adress
                 ServerPlayer serverPlayer = server.getPlayerList().getPlayerByName(address);
                 if (serverPlayer != null && ServerConfig.planePlayerTargets) {
                     // Check if location transmitter is required and if the target player has one enabled
-                    if (!ServerConfig.locationTransmitterNeeded || hasEnabledLocationTransmitter(serverPlayer)) {
+                    if (!ServerConfig.locationTransmitterNeeded || LocationTransmitterHelper.hasEnabledLocationTransmitter(serverPlayer)) {
                         plane.setTarget(serverPlayer);
                         level.addFreshEntity(plane);
                         stack.shrink(1);
+                    } else {
+                        player.displayClientMessage(Component.translatable(PackageCouriers.MODID + ".message.no_transmitter"), true);
                     }
                 } else {
                     AddressMarkerHandler.MarkerTarget target = AddressMarkerHandler.getMarkerTarget(address);
@@ -140,10 +144,11 @@ public class CardboardPlaneItem extends Item implements EjectorLaunchEffect {
             plane.setUnpack(stack.getOrDefault(PackageCouriers.PRE_OPENED, false));
             plane.shootFromRotation(-37.5F, yaw, 0.0F, 0.8F, 1.0F);
 
+            //TODO: this should be handled different as player adresses could be identified by @ in the adress
             ServerPlayer serverPlayer = server.getPlayerList().getPlayerByName(address);
             if (serverPlayer != null && ServerConfig.planePlayerTargets) {
                 // Check if location transmitter is required and if the target player has one enabled
-                if (!ServerConfig.locationTransmitterNeeded || hasEnabledLocationTransmitter(serverPlayer)) {
+                if (!ServerConfig.locationTransmitterNeeded || LocationTransmitterHelper.hasEnabledLocationTransmitter(serverPlayer)) {
                     plane.setTarget(serverPlayer);
                     level.addFreshEntity(plane);
                     return true;
@@ -168,27 +173,6 @@ public class CardboardPlaneItem extends Item implements EjectorLaunchEffect {
         // Other target types here, maybe using an injected interface for them instead of this.
 
         return true;
-    }
-
-    /**
-     * Checks if the player has an enabled location transmitter in their inventory or Curios slots.
-     * @param player The player to check
-     * @return true if the player has an enabled location transmitter, false otherwise
-     */
-    public static boolean hasEnabledLocationTransmitter(ServerPlayer player) {
-        // Check regular inventory
-        for (ItemStack stack : player.getInventory().items) {
-            if (stack.getItem() instanceof LocationTransmitterItem && LocationTransmitterItem.isEnabled(stack)) {
-                return true;
-            }
-        }
-        
-        // Check Curios slots if Curios is loaded
-        if (Mods.CURIOS.isLoaded() && CuriosCompat.isCuriosLoaded()) {
-            return CuriosCompat.hasEnabledLocationTransmitterInCurios(player);
-        }
-        
-        return false;
     }
 
     public static ItemStack withPackage(ItemStack box) {

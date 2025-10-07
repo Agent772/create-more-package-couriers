@@ -14,12 +14,50 @@ import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import com.krei.cmpackagecouriers.ServerConfig;
+import static com.krei.cmpackagecouriers.PackageCouriers.MODID;
 
 import java.util.List;
 
 import static com.krei.cmpackagecouriers.transmitter.LocationTransmitterReg.TRANSMITTER_ENABLED;
 
 public class LocationTransmitterItem extends Item {
+
+    /**
+     * Enables the transmitter for 60 seconds (1200 ticks) if it is currently disabled.
+     * @param stack The item stack
+     * @param player The server player (for sync)
+     * @param worldTime The current world time (in ticks)
+     */
+    public static void timedEnable(ItemStack stack, ServerPlayer player, long worldTime) {
+        CompoundTag tag = ensureTag(stack);
+        if (!tag.getBoolean("Enabled")) {
+            tag.putBoolean("Enabled", true);
+            int enableDuration = ServerConfig.timedEnableTime;
+            tag.putLong("EnableUntil", worldTime + enableDuration * 20L); // Convert seconds to ticks
+            stack.set(TRANSMITTER_ENABLED, CustomData.of(tag));
+            if (player != null) player.inventoryMenu.broadcastChanges();
+        }
+    }
+
+    /**
+     * Call this every server tick for all transmitter stacks in a player's inventory.
+     * Disables if the stored time is reached. Only writes NBT when disabling.
+     * @param stack The item stack
+     * @param player The server player (for sync)
+     * @param worldTime The current world time (in ticks)
+     */
+    public static void tickCheckTimer(ItemStack stack, ServerPlayer player, long worldTime) {
+        CompoundTag tag = ensureTag(stack);
+        if (tag.getBoolean("Enabled") && tag.contains("EnableUntil")) {
+            long until = tag.getLong("EnableUntil");
+            if (worldTime >= until) {
+                tag.putBoolean("Enabled", false);
+                tag.remove("EnableUntil");
+                stack.set(TRANSMITTER_ENABLED, CustomData.of(tag));
+                if (player != null) player.inventoryMenu.broadcastChanges();
+            }
+        }
+    }
 
     public LocationTransmitterItem(Properties properties) {
         super(properties.stacksTo(1));
@@ -35,12 +73,15 @@ public class LocationTransmitterItem extends Item {
         return tag.getBoolean("Enabled");
     }
 
+
     public static void toggleState(ItemStack stack) {
         boolean currentState = isEnabled(stack);
         CompoundTag tag = ensureTag(stack);
         tag.putBoolean("Enabled", !currentState);
         stack.set(TRANSMITTER_ENABLED, CustomData.of(tag));
     }
+
+
 
     @Override
     public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext tooltipContext,
@@ -49,14 +90,14 @@ public class LocationTransmitterItem extends Item {
 
         boolean enabled = isEnabled(stack);
         Component statusText = Component.translatable(
-                enabled ? "item.cmpackagecouriers.location_transmitter.enabled" : "item.cmpackagecouriers.location_transmitter.disabled"
+                enabled ? MODID + ".location_transmitter.enabled" : MODID + ".location_transmitter.disabled"
         ).withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED);
         
-        tooltipComponents.add(Component.translatable("item.cmpackagecouriers.location_transmitter.status")
+        tooltipComponents.add(Component.translatable(MODID + ".location_transmitter.status")
                 .append(": ").append(statusText));
 
         tooltipComponents.add(
-            Component.translatable("item.cmpackagecouriers.location_transmitter.server_config")
+            Component.translatable(MODID + ".location_transmitter.server_config")
             .append(": ")
             .append(
                 Component.literal(String.valueOf(ServerConfig.locationTransmitterNeeded))
@@ -64,7 +105,7 @@ public class LocationTransmitterItem extends Item {
             )
         );
 
-        tooltipComponents.add(Component.translatable("item.cmpackagecouriers.location_transmitter.tooltip")
+        tooltipComponents.add(Component.translatable(MODID + ".location_transmitter.tooltip")
                 .withStyle(ChatFormatting.GRAY));
     }
 
@@ -77,7 +118,7 @@ public class LocationTransmitterItem extends Item {
             toggleState(stack);
             
             Component message = Component.translatable(
-                    !currentState ? "item.cmpackagecouriers.location_transmitter.activated" : "item.cmpackagecouriers.location_transmitter.deactivated"
+                    !currentState ? MODID + ".location_transmitter.activated" : MODID + ".location_transmitter.deactivated"
             ).withStyle(!currentState ? ChatFormatting.GREEN : ChatFormatting.RED);
             
             player.displayClientMessage(message, true);

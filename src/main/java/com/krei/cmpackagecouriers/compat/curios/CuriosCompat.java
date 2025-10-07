@@ -39,6 +39,27 @@ public class CuriosCompat {
     }
 
     /**
+     * Gets the location transmitter ItemStack from the player's Curios inventory.
+     * @param player The player to check
+     * @return The ItemStack containing the location transmitter, or null if none found
+     */
+    public static ItemStack getLocationTransmitterFromCurios(ServerPlayer player) {
+        return CuriosApi.getCuriosInventory(player).map(curiosInventory -> {
+            Map<String, ICurioStacksHandler> curios = curiosInventory.getCurios();
+            for (ICurioStacksHandler handler : curios.values()) {
+                IDynamicStackHandler stacks = handler.getStacks();
+                for (int i = 0; i < stacks.getSlots(); i++) {
+                    ItemStack stack = stacks.getStackInSlot(i);
+                    if (stack.getItem() instanceof LocationTransmitterItem) {
+                        return stack;
+                    }
+                }
+            }
+            return null;
+        }).orElse(null);
+    }
+
+    /**
      * Checks if Curios is loaded and available.
      * @return true if Curios is loaded, false otherwise
      */

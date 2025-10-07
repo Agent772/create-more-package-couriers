@@ -22,6 +22,10 @@ public class ServerConfig {
             .comment("if true, cardboard planes will only be able to target players if they got a enabled location transmitter in their inventory or curios slots")
             .define("locationTransmitterNeededForPlayerTargeting", true);
 
+    private static final ModConfigSpec.IntValue TIMED_ENABLE_TIME = BUILDER
+            .comment("this sets the time (in seconds) a location transmitter remains enabled after being toggled on via another component (portable stock ticker)")
+            .defineInRange("locationTransmitterTimedEnableTime", 60, 1, 600);
+
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -29,12 +33,14 @@ public class ServerConfig {
     public static boolean planePlayerTargets;
     public static boolean shopAddressReplacement;
     public static boolean locationTransmitterNeeded;
+    public static int timedEnableTime;
 
     static void onLoad(final ModConfigEvent.Loading event) {
         planeLocationTargets = PLANE_LOCATION_TARGETS.get();
         planePlayerTargets = PLANE_PLAYER_TARGETS.get();
         shopAddressReplacement = SHOP_ADDRESS_REPLACEMENT.get();
         locationTransmitterNeeded = LOCATION_TRANSMITTER_NEEDED.get();
+        timedEnableTime = TIMED_ENABLE_TIME.get();
     }
 
     static void onReload(final ModConfigEvent.Reloading event) {
@@ -42,5 +48,6 @@ public class ServerConfig {
         planePlayerTargets = PLANE_PLAYER_TARGETS.get();
         shopAddressReplacement = SHOP_ADDRESS_REPLACEMENT.get();
         locationTransmitterNeeded = LOCATION_TRANSMITTER_NEEDED.get();
+        timedEnableTime = TIMED_ENABLE_TIME.get();
     }
 }

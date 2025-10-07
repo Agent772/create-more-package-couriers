@@ -30,6 +30,7 @@ public class AddressMarkerHandler {
 
     @SubscribeEvent
     public static void serverTick(ServerTickEvent.Post event) {
+        // Handle marker timeouts
         Iterator<Map.Entry<MarkerTarget, MarkerTarget>> iterator = markerMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<MarkerTarget, MarkerTarget> entry = iterator.next();

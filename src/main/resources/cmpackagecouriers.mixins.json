@@ -6,7 +6,16 @@
   "mixins": [
     "EjectorBlockEntityMixin",
     "BeltDeployerCallbacksMixin",
-    "SignBlockEntityMixin"
+    "SignBlockEntityMixin",
+    "PortableStockTickerScreenMixin"
   ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  },
+  "overwrites": {
+    "conformVisibility": true
+  },
   "minVersion": "0.8.5"
 }
